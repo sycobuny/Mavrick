@@ -1,153 +1,13 @@
-module Poker
+#
+# Mavrick: poker game creation/management
+# lib/hand.rb: Hand object - tells us what kind of hand someone's holding
+#
+# Copyright (c) 2009 Stephen Belcher <sycobuny@malkier.net>
+#
 
-class RoundStartedError < Exception; end
-class Game
-    Ante = 10
-    attr_reader   :deck, :table, :players, :pot
-    attr_accessor :ante
+module Mavrick
 
-    def initialize(players, num_decks = 1, ante = Ante,
-                   starting_chips = Player::StartingChips)
-        players.each do |player|
-            (@table ||= []) << Player.new(self, player, starting_chips)
-        end 
-
-        @deck = Deck.new(num_decks)
-        @ante = ante
-
-        @pot = nil
-    end
-
-    ######
-    public
-    ######
-
-    def start_round(new_ante = nil, players = @table)
-        raise RoundStartedError if @pot
-
-        @ante = new_ante if new_ante
-        @pot = []
-        @deck.shuffle!
-        @table.push(@table.shift) # rotate the first player
-
-        @players = @table.collect do |player|
-            next unless players.include?(player)
-            begin
-                @pot.concat(player.ante_up(@ante))
-                player.new_hand
-            rescue PlayerCantAnteError
-                next
-            end
-
-            player.new_hand
-        end
-
-        1.upto(5) do
-            @players.each { |player| player.hand << @deck.deal }
-        end
-    end
-end
-
-class ChipNoMatchError < Exception; end
-class Chip
-    Types = {:white => 1, :red => 10, :blue => 25, :green => 50, :black => 100}
-    attr_reader :type
-
-    def initialize(type)
-        @type = type
-    end
-
-    ######
-    public
-    ######
-
-    def Chip.ascending
-        Types.keys.sort { |a, b| Types[a] <=> Types[b] }
-    end
-
-    def Chip.descending
-        ascending.reverse
-    end
-
-    def Chip.value_of(array)
-        value = 0
-        array.each { |chip| value += chip.value }
-        value
-    end
-
-    # XXX - Need a way to run a bank, here.
-    def Chip.exchange(from, count, to)
-    end
-
-    def value
-        Types[@type]
-    end
-
-    def Chip.value(type)
-        Types[type]
-    end
-end
-
-class PlayerCantAnteError < Exception; end
-class Player
-    StartingChips = {:white => 25, :red => 10, :blue => 5, :green => 5,
-                     :black => 5}
-    attr_reader   :game, :chips, :hand
-    attr_accessor :ident
-
-    def initialize(game, ident, starting_chips = StartingChips)
-        @game  = game
-        @ident = ident
-
-        @chips = {}
-        starting_chips.each do |k, v|
-            @chips[k] = []
-            1.upto(v) { @chips[k] << Chip.new(k) }
-        end
-    end
-
-    ######
-    public
-    ######
-
-    def new_hand
-        @hand = Hand.new
-    end
-    
-    def worth
-        Chip.value_of(all_chips)
-    end
-
-    def all_chips
-        chips.values.flatten
-    end
-
-    def ante_up(ante)
-        chips = {}
-        Chip.descending.each do |type|
-            while Chip.value(type) <= ante
-                chips[type] ||= 0
-                chips[type] += 1
-                ante -= Chip.value(type)
-            end
-        end
-
-        raise PlayerCantAnteError if ante > 0
-
-        chips.keys.collect do |type|
-            1.upto(chips[type]).collect { @chips[type].shift }
-        end.flatten
-    end
-
-    def add_to_worth(chips)
-        chips.each { |chip| @chips[chip.type] << chip }
-    end
-
-    def bet(chips)
-
-    end
-end
-
+class HandCompleteError   < Exception; end # these two juxtaposed is humorous.
 class HandIncompleteError < Exception; end
 class HandUnknownError    < Exception; end
 class Hand
@@ -192,7 +52,7 @@ class Hand
             (@cards[4].index == (@cards[3].index + 1))
             in_order = true
         else
-            in_order = false 
+            in_order = false
         end
 
         matches = {}
@@ -250,6 +110,7 @@ class Hand
     end
 
     def <<(card)
+        raise HandCompleteError if @cards.length == 5
         @cards << card
     end
 
@@ -318,70 +179,4 @@ class Hand
     end
 end
 
-class Card
-    include Comparable
-
-    Suits  = %w(Hearts Diamonds Spades Clubs)
-    Values = %w(2 3 4 5 6 7 8 9 10 Jack Queen King Ace)
-
-    attr_reader :deck, :suit, :value
-
-    def initialize(deck, value, suit)
-        @deck, @suit, @value = deck, suit, value
-    end
-
-    ######
-    public
-    ######
-
-    ##
-    # spaceship operator, enables all other comparisons and sorting.
-    def <=>(other)
-        self.index <=> other.index
-    end
-
-    ##
-    # the index of the card, since we can't rely on string comparison.
-    def index
-        Values.index(@value)
-    end
-
-    ##
-    # the index of any old card
-    def Card.index(value)
-        Values.index(value)
-    end
-end
-
-class Deck
-    attr_reader :cards
-
-    def initialize(num_decks = 1)
-        @cards = []
-        @deal  = nil
-
-        1.upto(num_decks) do
-            Card::Suits.each do |suit|
-                Card::Values.each do |value|
-                    @cards << Card.new(self, value, suit)
-                end
-            end
-        end
-    end
-
-    ######
-    public
-    ######
-
-    def shuffle!
-        @deal = nil
-        @cards.sort! { rand(65536) <=> rand(65536) }
-        self
-    end
-
-    def deal
-        (@deal ||= @cards.dup).shift
-    end
-end
-
-end # module Poker
+end # module Mavrick
