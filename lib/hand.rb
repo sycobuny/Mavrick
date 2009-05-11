@@ -7,17 +7,29 @@
 
 module Mavrick
 
-class HandCompleteError   < Exception; end # these two juxtaposed is humorous.
+# An error class representing an attempt to add cards to a complete hand.
+class HandCompleteError   < Exception; end
+
+# An error class representing an attempt to evaluate an incomplete hand.
 class HandIncompleteError < Exception; end
+
+# An error class representing an attempt to compare an unknown hand.
 class HandUnknownError    < Exception; end
+
 class Hand
     include Comparable
 
+    # The full list of hand names, in order from worst to best.
     Names = ['High Card', 'Pair', 'Two Pair', 'Three of a Kind', 'Straight',
              'Flush', 'Full House', 'Four of a Kind', 'Straight Flush',
              'Royal Flush']
     attr_accessor :cards
 
+    #
+    # Basic setup of a Hand class.
+    # ---
+    # returns:: +Hand+
+    #
     def initialize
         @cards = []
 
@@ -33,10 +45,23 @@ class Hand
     public
     ######
 
+    #
+    # Tells us whether the hand is complete, which generally means 5 cards are
+    # available.
+    # ---
+    # returns:: +true+ or +false+
+    #
     def complete?
         @cards.length == 5
     end
 
+    #
+    # Gives the current name of the hand.  See +Names+ for a complete list of
+    # the possible names.
+    # ---
+    # raises:: +HandIncompleteError+ if the hand is not complete.
+    # returns:: +String+
+    #
     def name
         raise HandIncompleteError unless complete?
         @cards.sort!
@@ -58,6 +83,8 @@ class Hand
         matches = {}
         @cards.each { |c| matches[c.value] ||= 0; matches[c.value] += 1 }
 
+        # we need these to be class variables so that they can be accessed for
+        # comparisons in another method.
         @four  = matches.keys.find     { |v| matches[v] == 4 }
         @three = matches.keys.find     { |v| matches[v] == 3 }
         @two   = matches.keys.find_all { |v| matches[v] == 2 }
@@ -103,17 +130,38 @@ class Hand
         return Names[-10] # don't need return but it matches styles.
     end
 
+    #
+    # Returns the list of the names of the cards in the hand from low to high.
+    # ---
+    # returns:: +String+
+    #
     def to_s
         @cards.sort.collect do |card|
             "#{card.value} of #{card.suit}"
         end.join(', ')
     end
 
+    #
+    # Adds a card to the hand.
+    # ---
+    # raises:: +HandCompleteError+ if no cards can be added
+    # card:: The +Card+ to be added to the hand.
+    # returns:: +nil+
+    #
     def <<(card)
         raise HandCompleteError if @cards.length == 5
         @cards << card
+
+        nil
     end
 
+    #
+    # Compares a hand to another hand to see which is better.
+    # ---
+    # raises:: see Hand#name
+    # other:: +Hand+
+    # returns:: +Integer+ - standard spaceship operator returns
+    #
     def <=>(other)
         sname = name
         oname = other.name
@@ -174,6 +222,11 @@ class Hand
         end
     end
 
+    #
+    # Returns the highest card in the hand.
+    # ---
+    # returns:: +Card+
+    #
     def high_card
         @cards.sort[-1]
     end
