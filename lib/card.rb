@@ -7,6 +7,8 @@
 
 module Mavrick
 
+class CardInvalidError < Exception; end
+
 class Card
     include Comparable
 
@@ -27,6 +29,11 @@ class Card
     # returns:: +Card+
     #
     def initialize(deck, value, suit)
+        unless Values.include?(value) and Suits.include?(suit)
+            raise CardInvalidError, "The #{value} of #{suit} is not a valid " +
+                                    "card"
+        end
+
         @deck, @suit, @value = deck, suit, value
     end
 
@@ -50,6 +57,15 @@ class Card
     #
     def index
         Values.index(@value)
+    end
+
+    #
+    # The card's name.
+    # ---
+    # returns:: +String+
+    #
+    def to_s
+        "%s of %s" % [@value, @suit]
     end
 
     #

@@ -22,7 +22,7 @@ class Hand
     # The full list of hand names, in order from worst to best.
     Names = ['High Card', 'Pair', 'Two Pair', 'Three of a Kind', 'Straight',
              'Flush', 'Full House', 'Four of a Kind', 'Straight Flush',
-             'Royal Flush']
+             'Royal Flush', 'Five of a Kind']
     attr_accessor :cards
 
     #
@@ -33,13 +33,13 @@ class Hand
     def initialize
         @cards = []
 
-        @two, @three, @four = nil, nil, nil
+        @two, @three, @four, @five = nil, nil, nil, nil
     end
 
     #########
     protected
     #########
-    attr_reader :two, :three, :four, :other
+    attr_reader :two, :three, :four, :five, :other
 
     ######
     public
@@ -80,11 +80,13 @@ class Hand
             in_order = false
         end
 
+        # count the number of matches for a given card
         matches = {}
         @cards.each { |c| matches[c.value] ||= 0; matches[c.value] += 1 }
 
-        # we need these to be class variables so that they can be accessed for
-        # comparisons in another method.
+        # we need these to be instance variables so that they can be accessed
+        # for comparisons in another method.
+        @five  = matches.keys.find     { |v| matches[v] == 5 }
         @four  = matches.keys.find     { |v| matches[v] == 4 }
         @three = matches.keys.find     { |v| matches[v] == 3 }
         @two   = matches.keys.find_all { |v| matches[v] == 2 }
@@ -99,35 +101,38 @@ class Hand
         #  - sycobuny
         #
 
+        # five of a kind
+        return Names[-1] if @five
+
         # straight flush and royal flush
         if suit_matches and in_order
-            return Names[-1] if high_card.value == 'Ace'
-            return Names[-2]
+            return Names[-2] if high_card.value == 'Ace'
+            return Names[-3]
         end
 
         # four of a kind
-        return Names[-3] if @four
+        return Names[-4] if @four
 
         # full house
-        return Names[-4] if @three and not @two.empty?
+        return Names[-5] if @three and not @two.empty?
 
         # flush
-        return Names[-5] if suit_matches
+        return Names[-6] if suit_matches
 
         # straight
-        return Names[-6] if in_order
+        return Names[-7] if in_order
 
         # three of a kind
-        return Names[-7] if @three
+        return Names[-8] if @three
 
         # two pair
-        return Names[-8] if @two.length == 2
+        return Names[-9] if @two.length == 2
 
         # pair
-        return Names[-9] if not @two.empty?
+        return Names[-10] if not @two.empty?
 
         # high card
-        return Names[-10] # don't need return but it matches styles.
+        return Names[-11] # don't need return but it matches styles.
     end
 
     #
