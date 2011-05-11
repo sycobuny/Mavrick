@@ -9,8 +9,7 @@ class Deck
         end
     end
 
-    def shuffle! # (this_many = 1)
-#        this_many.times { @cards.sort! { rand <=> rand } }
+    def shuffle!
         @cards.sort! { rand <=> rand }
     end
 

@@ -9,7 +9,9 @@ class Game
 
     def initialize(player_count = 4)
         @deck = Deck.new
-        @players = Range.new(1, player_count).collect { Player.new }
+        @players = Range.new(1, player_count).collect do |x|
+            Player.new("Player #{x}")
+        end
     end
 
     def play
@@ -23,10 +25,10 @@ class Game
         max_score = 0
         max_score_player = nil
         tied = false
-        @players.each do |p|
-            if (score = p.score) > max_score
+        @players.each do |player|
+            if (score = player.score) > max_score
                 max_score        = score
-                max_score_player = p
+                max_score_player = player
                 tied             = false
             elsif score == max_score
                 tied = true
