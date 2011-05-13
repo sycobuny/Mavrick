@@ -30,12 +30,15 @@ class Deck
         FaceValues = [:'2', :'3', :'4', :'5', :'6', :'7', :'8', :'9', :'10',
                       :jack, :queen, :king, :ace]
 
+        @@face_lookups = {}
+        FaceValues.each_with_index { |fv, i| @@face_lookups[fv] = i }
+
         def initialize(suit, face_value)
             @suit, @face_value = suit, face_value
         end
 
         def index
-            FaceValues.find_index { |value| value == @face_value }
+            @index ||= @@face_lookups[@face_value]
         end
 
         def <=>(other)
