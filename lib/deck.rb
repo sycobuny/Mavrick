@@ -23,6 +23,7 @@ class Deck
     end
 
     class Card
+        include Comparable
         attr_reader :suit, :face_value
 
         Suits = [:clubs, :spades, :diamonds, :hearts]
@@ -35,6 +36,10 @@ class Deck
 
         def index
             FaceValues.find_index { |value| value == @face_value }
+        end
+
+        def <=>(other)
+            self.index <=> other.index
         end
     end
 end

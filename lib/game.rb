@@ -1,4 +1,10 @@
-class TieException < Exception; end
+class TieException < Exception
+    attr_reader :players
+
+    def initialize(players)
+        @players = players
+    end
+end
 
 class Game
     attr_reader :deck, :players
@@ -22,20 +28,31 @@ class Game
             @players.each { |p| @deck.deal(p) }
         end
 
-        max_score = 0
-        max_score_player = nil
-        tied = false
+        max_score = -1
+        tied = []
         @players.each do |player|
             if (score = player.score) > max_score
-                max_score        = score
-                max_score_player = player
-                tied             = false
+                max_score = score
+                tied      = [player]
             elsif score == max_score
-                tied = true
+                tied << player
             end
         end
 
-        raise TieException if tied
-        max_score_player
+        if tied.length > 1
+            still_tied = [first = tied.shift]
+            while (second = tied.shift)
+                if (resolution = first.hand.resolve_tie(second.hand)) == 0
+                    still_tied << second
+                elsif resolution == 1
+                    still_tied = [first = second]
+                end
+            end
+
+            tied = still_tied
+        end
+
+        raise TieException.new(tied) if tied.length > 1
+        tied[0]
     end
 end

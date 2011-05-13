@@ -3,35 +3,26 @@ require 'deck'
 require 'game'
 require 'player'
 
-g = Game.new
+g = Game.new(1)
 tie_results = {}
 real_results = {}
 
-10000.times do
+10_000_000.times do
     begin
         p = g.play
         real_results[p.hand_name] ||= 0
         real_results[p.hand_name] += 1
     rescue TieException => e
-        max_score   = 0
-        max_hand    = nil
-        score_count = 0
-        g.players.each do |player|
-            if player.score > max_score
-                max_score = player.score
-                max_hand = player.hand_name
-                score_count = 1
-            elsif player.score == max_score
-                score_count += 1
-            end
-        end
+        max_hand    = e.players[0].hand.name
+        score_count = e.players.length
+
         tie_results[max_hand] ||= {}
         tie_results[max_hand][score_count] ||= 0
         tie_results[max_hand][score_count] += 1
     end
 end
 
-real_results.each do |key, value|
+real_results.sort { |a, b| a[1] <=> b[1] }.each do |key, value|
     puts "There were #{value} winning hands with #{key}"
 end
 
