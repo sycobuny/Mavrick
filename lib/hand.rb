@@ -1,4 +1,9 @@
 class Hand
+    FIRST_TWO_CARDS   = (0..1)
+    FIRST_THREE_CARDS = (0..2)
+    FIRST_FOUR_CARDS  = (0..3)
+    LAST_THREE_CARDS  = (2..4)
+
     attr_reader :name, :ranked, :kickers
 
     @@hands = {}
@@ -32,7 +37,7 @@ class Hand
     def score
         return @score unless @calculate_score
         @score = @@rankings.reverse.find_index do |hand|
-            send(hand.to_s.+('?'))
+            send(:"#{hand}?")
         end
 
         @score = @score ? @@rankings.length - @score : 0
@@ -63,7 +68,7 @@ class Hand
     end
 
     def self.match(&block)
-        method = (hand = @@hand).to_s.+('?').to_sym
+        method = :"#{(hand = @@hand)}?"
         @@hands[hand] = block
 
         define_method(method) do
@@ -114,7 +119,7 @@ class Hand
 
     hand :one_pair do
         match do
-            (0..3).find do |x|
+            FIRST_FOUR_CARDS.find do |x|
                 value = @cards[x].face_value
                 cards = @cards.find_all { |card| card.face_value == value }
 
@@ -138,7 +143,7 @@ class Hand
 
     hand :two_pair do
         match do
-            (0..3).each do |x|
+            FIRST_FOUR_CARDS.each do |x|
                 value = @cards[x].face_value
                 cards = @cards.find_all { |card| card.face_value == value }
 
@@ -150,7 +155,7 @@ class Hand
 
             found = false
             if @ranked.length > 0
-                (2..4).each do |x|
+                LAST_THREE_CARDS.each do |x|
                     value = @cards[x].face_value
                     next if value == @ranked[0].face_value
 
@@ -179,7 +184,7 @@ class Hand
 
     hand :three_of_a_kind do
         match do
-            (0..2).find do |x|
+            FIRST_THREE_CARDS.find do |x|
                 value = @cards[x].face_value
                 cards = @cards.find_all { |card| card.face_value == value }
 
@@ -267,7 +272,7 @@ class Hand
 
     hand :four_of_a_kind do
         match do
-            (0..1).each do
+            FIRST_TWO_CARDS.each do
                 value = @cards[0].face_value
                 cards = @cards.find_all { |card| card.face_value == value }
 

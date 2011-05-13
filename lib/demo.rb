@@ -7,7 +7,7 @@ g = Game.new(1)
 tie_results = {}
 real_results = {}
 
-10_000_000.times do
+50000.times do
     begin
         p = g.play
         real_results[p.hand_name] ||= 0

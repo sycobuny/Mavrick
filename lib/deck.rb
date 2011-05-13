@@ -10,7 +10,7 @@ class Deck
     end
 
     def shuffle!
-        @cards.sort! { rand <=> rand }
+        @cards = @cards.sort_by { rand }
     end
 
     def deal(player)
