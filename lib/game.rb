@@ -7,20 +7,28 @@ class TieException < Exception
 end
 
 class Game
-    attr_reader :deck, :players
+    attr_reader :winner, :pot, :deck, :players, :losers
 
-    def self.play(player_count = 4)
-        Game.new(player_count).play
+    def self.play(player_count = 4, player_chips = 1)
+        Game.new(player_count, player_chips).play
     end
 
-    def initialize(player_count = 4)
-        @deck = Deck.new
+    def initialize(player_count = 4, player_chips = 250)
+        @bank   = Bank.new
+        @deck   = Deck.new
+
+        @pot    = @bank.mint(0)
+        @winner = nil
+
         @players = Range.new(1, player_count).collect do |x|
-            Player.new("Player #{x}")
+            Player.new("Player #{x}", @bank.mint(player_chips))
         end
+        @losers = []
     end
 
     def play
+        distribute_winnings!
+
         @players.each { |p| @deck.retrieve_cards(p) }
         @deck.shuffle!
 
@@ -31,6 +39,8 @@ class Game
         max_score = -1
         tied = []
         @players.each do |player|
+            @pot.merge!(player.chips.split!(1))
+
             if (score = player.score) > max_score
                 max_score = score
                 tied      = [player]
@@ -53,6 +63,16 @@ class Game
         end
 
         raise TieException.new(tied) if tied.length > 1
-        tied[0]
+        @winner = tied[0]
+    end
+
+    def distribute_winnings!
+        @winner.chips.merge!(@pot) if @winner
+        @winner = nil
+
+        losers = @players.find_all { |player| player.chips.value == 0 }
+        @players.delete_if { |player| player.chips.value == 0 }
+
+        @losers += losers
     end
 end

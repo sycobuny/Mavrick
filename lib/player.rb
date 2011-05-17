@@ -1,11 +1,12 @@
 require 'hand'
 
 class Player
-    attr_reader :name, :hand
+    attr_reader :name, :hand, :chips
 
-    def initialize(name)
-        @hand = Hand.new
-        @name = name
+    def initialize(name, chips)
+        @hand  = Hand.new
+        @name  = name
+        @chips = chips
     end
 
     def receive_card(card)

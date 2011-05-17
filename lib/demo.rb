@@ -1,13 +1,16 @@
 $:.unshift('.')
+require 'bank'
 require 'deck'
 require 'game'
 require 'player'
 
-g = Game.new(1)
+g = Game.new(4)
 tie_results = {}
 real_results = {}
+games = 0
 
-50000.times do
+until g.players.length == 1 do
+    games += 1
     begin
         p = g.play
         real_results[p.hand_name] ||= 0
@@ -20,6 +23,12 @@ real_results = {}
         tie_results[max_hand][score_count] ||= 0
         tie_results[max_hand][score_count] += 1
     end
+end
+
+puts "I played #{games} games to find a winner"
+
+g.players.each do |player|
+    puts "#{player.name} has #{player.chips.value} chips"
 end
 
 real_results.sort { |a, b| a[1] <=> b[1] }.each do |key, value|
